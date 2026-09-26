@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="3.12.0" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+    <ProjectReference Include="..\SearchDB.Application\SearchDB.Application.csproj" />
+    <ProjectReference Include="..\SearchDB.SeedData\SearchDB.SeedData.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Search\Indexes\*.json" />
+  </ItemGroup>
+</Project>

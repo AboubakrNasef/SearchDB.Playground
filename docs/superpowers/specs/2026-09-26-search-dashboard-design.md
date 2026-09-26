@@ -17,6 +17,7 @@ The solution currently contains a .NET 10 `Domain` project with a basic `Order` 
 - Use equivalent seed data and search fields so users can compare both implementations.
 - Use Aspire to run the local application and PostgreSQL, and to view development telemetry.
 - Use OpenTelemetry traces and metrics to observe each search path.
+- Run PostgreSQL and MongoDB Search integration tests against disposable Docker containers through Testcontainers for .NET.
 
 ## Out of scope
 
@@ -59,7 +60,7 @@ The request accepts an entity scope (`products` or `orders`), a text query, pagi
 
 Both endpoints return the same response shape: entity scope, normalized items, total match count when supported, page information, and elapsed search duration. Results are ordered by relevance where available, with a stable secondary ordering for ties. Each backend may use its native search syntax and ranking, but the UI and filters remain consistent. Differences in tokenization, ranking, and supported query syntax must be documented rather than hidden.
 
-PostgreSQL uses its native full-text search capabilities and indexes over the selected fields. MongoDB uses Atlas Search indexes and queries. MongoDB Atlas Search requires a reachable Atlas deployment configured for the application; local Aspire orchestration must document this external prerequisite. PostgreSQL should be runnable locally through Aspire.
+PostgreSQL uses its native full-text search capabilities and indexes over the selected fields. MongoDB uses Atlas Search indexes and queries. The application supports a reachable Atlas deployment configured externally. Integration tests use the official MongoDB Atlas Local Docker image through Testcontainers so the MongoDB Search path can be exercised locally without a remote Atlas account. PostgreSQL integration tests use a disposable Testcontainers PostgreSQL instance. Aspire still runs PostgreSQL for local app development; Atlas connection setup remains documented for the running app.
 
 ## Frontend
 
@@ -81,7 +82,7 @@ The implementation should make telemetry behavior comparable across endpoints, w
 ## Validation approach
 
 - Unit-level checks cover domain invariants and application search request handling.
-- Integration checks verify each endpoint against its respective database and equivalent seed data.
+- Integration checks verify each endpoint against disposable Testcontainers PostgreSQL and MongoDB Atlas Local containers, using equivalent seed data.
 - Contract checks ensure both providers return the same response shape and honor shared filters.
 - A frontend check confirms each page calls its matching endpoint and displays loading, empty, error, and result states.
 - An observability check confirms traces and search metrics distinguish provider and scope without recording raw query text.

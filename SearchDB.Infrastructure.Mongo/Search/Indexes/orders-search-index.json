@@ -1,0 +1,10 @@
+{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "orderNumber": { "type": "string", "analyzer": "lucene.standard" },
+      "status": { "type": "string", "analyzer": "lucene.standard" },
+      "searchText": { "type": "string", "analyzer": "lucene.standard" }
+    }
+  }
+}

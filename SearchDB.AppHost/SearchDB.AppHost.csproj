@@ -9,4 +9,9 @@
     <UserSecretsId>d8a87b0c-5894-4baf-8d25-7b18c7716621</UserSecretsId>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.5.4" />
+    <ProjectReference Include="..\SearchDB.Api\SearchDB.Api.csproj" />
+  </ItemGroup>
+
 </Project>

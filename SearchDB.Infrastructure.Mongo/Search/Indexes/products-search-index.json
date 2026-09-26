@@ -1,0 +1,11 @@
+{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "sku": { "type": "string", "analyzer": "lucene.standard" },
+      "name": { "type": "string", "analyzer": "lucene.standard" },
+      "category": { "type": "string", "analyzer": "lucene.standard" },
+      "description": { "type": "string", "analyzer": "lucene.standard" }
+    }
+  }
+}

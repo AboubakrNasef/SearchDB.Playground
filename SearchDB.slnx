@@ -4,6 +4,16 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="Domain/Domain.csproj" />
+    <Project Path="SearchDB.Application/SearchDB.Application.csproj" />
+    <Project Path="SearchDB.SeedData/SearchDB.SeedData.csproj" />
+    <Project Path="Domain.Tests/Domain.Tests.csproj" />
+    <Project Path="SearchDB.Application.Tests/SearchDB.Application.Tests.csproj" />
+    <Project Path="SearchDB.Infrastructure.Postgres/SearchDB.Infrastructure.Postgres.csproj" />
+    <Project Path="SearchDB.Infrastructure.Postgres.Tests/SearchDB.Infrastructure.Postgres.Tests.csproj" />
+    <Project Path="SearchDB.Infrastructure.Mongo/SearchDB.Infrastructure.Mongo.csproj" />
+    <Project Path="SearchDB.Infrastructure.Mongo.Tests/SearchDB.Infrastructure.Mongo.Tests.csproj" />
+    <Project Path="SearchDB.Api/SearchDB.Api.csproj" />
+    <Project Path="SearchDB.Api.Tests/SearchDB.Api.Tests.csproj" />
   </Folder>
   <Project Path="SearchDB.AppHost/SearchDB.AppHost.csproj" />
   <Project Path="SearchDB.ServiceDefaults/SearchDB.ServiceDefaults.csproj" />
