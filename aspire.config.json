@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "SearchDB.AppHost/SearchDB.AppHost.csproj"
+  }
+}

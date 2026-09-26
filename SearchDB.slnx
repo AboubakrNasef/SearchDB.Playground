@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="docs/superpowers/specs/2026-09-26-search-dashboard-design.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="Domain/Domain.csproj" />
+  </Folder>
+  <Project Path="SearchDB.AppHost/SearchDB.AppHost.csproj" />
+  <Project Path="SearchDB.ServiceDefaults/SearchDB.ServiceDefaults.csproj" />
+</Solution>
