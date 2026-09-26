@@ -19,7 +19,9 @@ public class MongoSearchTests(AtlasLocalContainerFixture fixture)
         var result = await new MongoSearch(fixture.Database).SearchAsync(
             new(SearchEntity.Products, "keyboard", 1, 20, new(Category: "Accessories", Active: true)), CancellationToken.None);
 
-        Assert.Contains(result.Items, item => item.PrimaryText == "Mechanical Keyboard");
+        var product = Assert.Single(result.Items);
+        Assert.Equal("Mechanical Keyboard", product.PrimaryText);
+        Assert.True(product.Score > 0);
     }
 
     [Fact]

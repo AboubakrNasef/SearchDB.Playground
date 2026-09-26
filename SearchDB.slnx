@@ -6,6 +6,7 @@
     <Project Path="Domain/Domain.csproj" />
     <Project Path="SearchDB.Application/SearchDB.Application.csproj" />
     <Project Path="SearchDB.SeedData/SearchDB.SeedData.csproj" />
+    <Project Path="SearchDB.Initialize/SearchDB.Initialize.csproj" />
     <Project Path="Domain.Tests/Domain.Tests.csproj" />
     <Project Path="SearchDB.Application.Tests/SearchDB.Application.Tests.csproj" />
     <Project Path="SearchDB.Infrastructure.Postgres/SearchDB.Infrastructure.Postgres.csproj" />

@@ -15,7 +15,7 @@ From the solution directory, run:
 dotnet run --project SearchDB.AppHost
 ```
 
-Aspire starts the API and a persistent local PostgreSQL database. On first API startup in Development, the API creates the schema and loads shared demo products and orders. PostgreSQL search is available without MongoDB configuration.
+Aspire starts the API, Vite frontend, and persistent local databases. In the Aspire dashboard, start the `initialize` resource to create the PostgreSQL schema and seed both databases. PostgreSQL search is available without MongoDB configuration. Open the frontend endpoint from the dashboard; Aspire passes the API's HTTP endpoint to Vite for its `/api` proxy.
 
 ## Configure MongoDB Atlas for the app
 
@@ -26,9 +26,9 @@ dotnet user-secrets set "Mongo:ConnectionString" "mongodb+srv://<user>:<password
 dotnet user-secrets set "Mongo:Database" "searchdb" --project SearchDB.AppHost
 ```
 
-When configured, the Development API seeds the shared demo documents and creates the `products-search` and `orders-search` indexes from the JSON definitions under `SearchDB.Infrastructure.Mongo/Search/Indexes`. MongoDB Atlas Search indexes may take time to become queryable after creation. If Atlas is unavailable or cannot create an index, the API still starts so the PostgreSQL page remains usable; Mongo search reports the provider as unavailable.
+The `initialize` resource seeds shared demo documents and creates the `products-search` and `orders-search` indexes from the JSON definitions under `SearchDB.Infrastructure.Mongo/Search/Indexes`. MongoDB Atlas Search indexes may take time to become queryable after creation. If MongoDB is unavailable or cannot create an index, initialization reports the failure; PostgreSQL remains available.
 
-## Start the React dashboard
+## Run the React dashboard separately (optional)
 
 In a second terminal:
 
@@ -39,7 +39,7 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-The Vite development server proxies `/api` to `http://localhost:63253`, the API's local HTTP address when run directly. When using Aspire, copy the API HTTP URL shown in the Aspire dashboard into `VITE_API_ORIGIN` in `.env.local` because Aspire may assign a dynamic port. Open the URL printed by Vite and use the PostgreSQL or MongoDB Atlas item in the sidebar. Each page calls only its matching API endpoint; both pages support product/order browse and search, filters, pagination, and provider duration.
+The Vite development server proxies `/api` to `http://localhost:63253`, the API's local HTTP address when run directly. When running it separately while Aspire is active, set `VITE_API_ORIGIN` in `.env.local` to the API HTTP URL shown in the Aspire dashboard because Aspire may assign a dynamic port. Use the PostgreSQL or MongoDB Atlas item in the sidebar. Each page calls only its matching API endpoint; both pages support product/order browse and search, filters, pagination, and provider duration.
 
 The frontend scripts are `npm test` and `npm run build`. The displayed API duration is the provider request time, not a browser round trip or a controlled performance benchmark.
 

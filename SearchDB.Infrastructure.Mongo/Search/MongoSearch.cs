@@ -1,9 +1,7 @@
 using System.Diagnostics;
 using Domain;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
-using MongoDB.Driver.Core.Misc;
 using SearchDB.Application.Search;
 using SearchDB.Infrastructure.Mongo.Documents;
 
@@ -30,103 +28,114 @@ public sealed class MongoSearch(IMongoDatabase database) : IMongoSearch
         }
     }
 
-    private async Task<SearchResult> SearchProducts(SearchRequest request, CancellationToken cancellationToken)
+    private Task<SearchResult> SearchProducts(SearchRequest request, CancellationToken cancellationToken)
     {
-        var stages = new List<BsonDocument>();
-        if (!string.IsNullOrWhiteSpace(request.Query))
-            stages.Add(new("$search", new BsonDocument
-            {
-                { "index", MongoSearchIndexes.ProductsIndex },
-                { "text", new BsonDocument { { "query", request.Query.Trim() }, { "path", new BsonArray { "sku", "name", "category", "description" } } } }
-            }));
+        var filters = Builders<ProductDocument>.Filter;
+        var filter = filters.And(
+            request.Filters.Category is null ? filters.Empty : filters.Eq(product => product.Category, request.Filters.Category),
+            request.Filters.Active is null ? filters.Empty : filters.Eq(product => product.IsActive, request.Filters.Active.Value));
 
-        var filter = new BsonDocument();
-        if (request.Filters.Category is not null) filter.Add("category", request.Filters.Category);
-        if (request.Filters.Active.HasValue) filter.Add("isActive", request.Filters.Active.Value);
-        AddFilterStage(stages, filter);
-        return await RunFacetedSearch(database.GetCollection<ProductDocument>(MongoSearchCollections.Products), stages, request,
-            new BsonDocument { { "_id", 1 }, { "name", 1 }, { "sku", 1 }, { "category", 1 }, { "unitPrice", 1 }, { "currency", 1 }, { "isActive", 1 }, { "score", 1 } },
-            MapProduct, cancellationToken);
+        var search = string.IsNullOrWhiteSpace(request.Query)
+            ? null
+            : Builders<ProductDocument>.Search.Text(
+                Builders<ProductDocument>.SearchPath.Multi(product => product.Sku, product => product.Name, product => product.Category, product => product.Description),
+                request.Query.Trim());
+        var projection = Builders<ProductDocument>.Projection
+            .Include(product => product.Id)
+            .Include(product => product.Name)
+            .Include(product => product.Sku)
+            .Include(product => product.Category)
+            .Include(product => product.UnitPrice)
+            .Include(product => product.Currency)
+            .Include(product => product.IsActive);
+        if (search is not null)
+            projection = projection.MetaSearchScore("score");
+
+        var sort = search is null
+            ? Builders<ProductDocument>.Sort.Ascending(product => product.Id)
+            : Builders<ProductDocument>.Sort.MetaSearchScoreDescending().Ascending(product => product.Id);
+
+        return RunSearch(database.GetCollection<ProductDocument>(MongoSearchCollections.Products), search,
+            MongoSearchIndexes.ProductsIndex, filter, sort, projection, request,
+            hit => new SearchResultItem(hit.Id.ToString(), hit.Name!,
+                $"{hit.Sku} · {hit.Currency} {hit.UnitPrice:0.00}", hit.Category,
+                hit.IsActive ? "Active" : "Inactive", hit.UnitPrice, null, hit.Score), cancellationToken);
     }
 
-    private async Task<SearchResult> SearchOrders(SearchRequest request, CancellationToken cancellationToken)
+    private Task<SearchResult> SearchOrders(SearchRequest request, CancellationToken cancellationToken)
     {
-        var stages = new List<BsonDocument>();
-        if (!string.IsNullOrWhiteSpace(request.Query))
-            stages.Add(new("$search", new BsonDocument
-            {
-                { "index", MongoSearchIndexes.OrdersIndex },
-                { "text", new BsonDocument { { "query", request.Query.Trim() }, { "path", new BsonArray { "orderNumber", "status", "searchText" } } } }
-            }));
+        var filters = Builders<OrderDocument>.Filter;
+        var filter = filters.And(
+            request.Filters.Status is null ? filters.Empty : filters.Eq(order => order.Status, request.Filters.Status.Value.ToString()),
+            request.Filters.CreatedFrom is null ? filters.Empty : filters.Gte(order => order.CreatedAt, request.Filters.CreatedFrom.Value.UtcDateTime),
+            request.Filters.CreatedTo is null ? filters.Empty : filters.Lte(order => order.CreatedAt, request.Filters.CreatedTo.Value.UtcDateTime));
 
-        var filter = new BsonDocument();
-        if (request.Filters.Status.HasValue) filter.Add("status", request.Filters.Status.Value.ToString());
-        var created = new BsonDocument();
-        if (request.Filters.CreatedFrom.HasValue) created.Add("$gte", new BsonDateTime(request.Filters.CreatedFrom.Value.UtcDateTime));
-        if (request.Filters.CreatedTo.HasValue) created.Add("$lte", new BsonDateTime(request.Filters.CreatedTo.Value.UtcDateTime));
-        if (created.ElementCount > 0) filter.Add("createdAt", created);
-        AddFilterStage(stages, filter);
-        return await RunFacetedSearch(database.GetCollection<OrderDocument>(MongoSearchCollections.Orders), stages, request,
-            new BsonDocument { { "_id", 1 }, { "orderNumber", 1 }, { "status", 1 }, { "createdAt", 1 }, { "totalAmount", 1 }, { "score", 1 } },
-            MapOrder, cancellationToken);
+        var search = string.IsNullOrWhiteSpace(request.Query)
+            ? null
+            : Builders<OrderDocument>.Search.Text(
+                Builders<OrderDocument>.SearchPath.Multi(order => order.OrderNumber, order => order.Status, order => order.SearchText),
+                request.Query.Trim());
+        var projection = Builders<OrderDocument>.Projection
+            .Include(order => order.Id)
+            .Include(order => order.OrderNumber)
+            .Include(order => order.Status)
+            .Include(order => order.CreatedAt)
+            .Include(order => order.TotalAmount);
+        if (search is not null)
+            projection = projection.MetaSearchScore("score");
+
+        var sort = search is null
+            ? Builders<OrderDocument>.Sort.Descending(order => order.CreatedAt).Ascending(order => order.Id)
+            : Builders<OrderDocument>.Sort.MetaSearchScoreDescending().Descending(order => order.CreatedAt).Ascending(order => order.Id);
+
+        return RunSearch(database.GetCollection<OrderDocument>(MongoSearchCollections.Orders), search,
+            MongoSearchIndexes.OrdersIndex, filter, sort, projection, request,
+            hit => new SearchResultItem(hit.Id.ToString(), hit.OrderNumber!, hit.Status!, null,
+                hit.Status, hit.TotalAmount, hit.CreatedAt, hit.Score), cancellationToken);
     }
 
-    private static void AddFilterStage(List<BsonDocument> stages, BsonDocument filter)
-    {
-        if (filter.ElementCount > 0)
-            stages.Add(new BsonDocument("$match", filter));
-    }
-
-    private static async Task<SearchResult> RunFacetedSearch<TDocument>(
+    private static async Task<SearchResult> RunSearch<TDocument>(
         IMongoCollection<TDocument> collection,
-        List<BsonDocument> stages,
+        MongoDB.Driver.Search.SearchDefinition<TDocument>? search,
+        string indexName,
+        FilterDefinition<TDocument> filter,
+        SortDefinition<TDocument> sort,
+        ProjectionDefinition<TDocument> projection,
         SearchRequest request,
-        BsonDocument projection,
-        Func<BsonDocument, SearchResultItem> map,
+        Func<SearchHit, SearchResultItem> map,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Query))
-            stages.Add(new BsonDocument("$set", new BsonDocument("score", 0d)));
-        else
-            stages.Add(new BsonDocument("$set", new BsonDocument("score", new BsonDocument("$meta", "searchScore"))));
+        IAggregateFluent<TDocument> aggregate = collection.Aggregate();
+        if (search is not null)
+            aggregate = aggregate.Search(search, new MongoDB.Driver.Search.SearchOptions<TDocument> { IndexName = indexName });
+        aggregate = aggregate.Match(filter);
 
-        var itemSort = string.IsNullOrWhiteSpace(request.Query)
-            ? new BsonDocument("_id", 1)
-            : new BsonDocument { { "score", -1 }, { "_id", 1 } };
-        var pipeline = PipelineDefinition<TDocument, BsonDocument>.Create(stages.Append(new BsonDocument("$facet", new BsonDocument
-        {
-            { "items", new BsonArray
-                {
-                    new BsonDocument("$sort", itemSort),
-                    new BsonDocument("$skip", (long)(request.Page - 1) * request.PageSize),
-                    new BsonDocument("$limit", request.PageSize),
-                    new BsonDocument("$project", projection)
-                }
-            },
-            { "total", new BsonArray { new BsonDocument("$count", "count") } }
-        })).ToArray());
+        var count = await aggregate.Count().FirstOrDefaultAsync(cancellationToken);
+        var hits = await aggregate.Sort(sort)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Limit(request.PageSize)
+            .Project<SearchHit>(projection)
+            .ToListAsync(cancellationToken);
 
-        var facet = await collection.Aggregate<BsonDocument>(pipeline).FirstOrDefaultAsync(cancellationToken);
-        var items = facet?["items"].AsBsonArray.Select(value => map(value.AsBsonDocument)).ToArray() ?? [];
-        var counts = facet?["total"].AsBsonArray;
-        long? total = counts is { Count: > 0 } ? counts[0]["count"].ToInt64() : 0L;
-        return new(request.Entity, items, total, request.Page, request.PageSize, 0);
+        return new(request.Entity, hits.Select(map).ToArray(), count?.Count ?? 0,
+            request.Page, request.PageSize, 0);
     }
 
-    private static SearchResultItem MapProduct(BsonDocument row) => new(
-        ReadGuid(row["_id"]).ToString(), row["name"].AsString,
-        $"{row["sku"].AsString} · {row["currency"].AsString} {row["unitPrice"].ToDecimal():0.00}",
-        row["category"].AsString, row["isActive"].AsBoolean ? "Active" : "Inactive",
-        row["unitPrice"].ToDecimal(), null, row["score"].ToDouble());
-
-    private static SearchResultItem MapOrder(BsonDocument row)
+    private sealed class SearchHit
     {
-        var status = row["status"].AsString;
-        return new(ReadGuid(row["_id"]).ToString(), row["orderNumber"].AsString, status, null, status,
-            row["totalAmount"].ToDecimal(), row["createdAt"].ToUniversalTime(), row["score"].ToDouble());
+        [BsonId]
+        [BsonGuidRepresentation(MongoDB.Bson.GuidRepresentation.Standard)]
+        public Guid Id { get; set; }
+        [BsonElement("name")] public string? Name { get; set; }
+        [BsonElement("sku")] public string? Sku { get; set; }
+        [BsonElement("category")] public string? Category { get; set; }
+        [BsonElement("currency")] public string? Currency { get; set; }
+        [BsonElement("isActive")] public bool IsActive { get; set; }
+        [BsonElement("orderNumber")] public string? OrderNumber { get; set; }
+        [BsonElement("status")] public string? Status { get; set; }
+        [BsonElement("createdAt")] public DateTimeOffset? CreatedAt { get; set; }
+        [BsonElement("totalAmount")] public decimal TotalAmount { get; set; }
+        [BsonElement("unitPrice")] public decimal UnitPrice { get; set; }
+        [BsonElement("score")] public double Score { get; set; }
     }
-
-    private static Guid ReadGuid(BsonValue value) => value.BsonType == BsonType.Binary
-        ? value.AsBsonBinaryData.ToGuid(GuidRepresentation.Standard)
-        : value.AsGuid;
 }
