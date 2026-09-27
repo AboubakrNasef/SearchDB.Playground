@@ -15,6 +15,7 @@
     <PackageReference Include="Aspire.Hosting.MongoDB" Version="13.5.3" />
     <ProjectReference Include="..\SearchDB.Api\SearchDB.Api.csproj" />
     <ProjectReference Include="..\SearchDB.Infrastructure.Mongo\SearchDB.Infrastructure.Mongo.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\SearchDB.Infrastructure.Postgres\SearchDB.Infrastructure.Postgres.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>

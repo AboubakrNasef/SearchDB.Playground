@@ -10,4 +10,7 @@
     <ProjectReference Include="..\SearchDB.Application\SearchDB.Application.csproj" />
     <ProjectReference Include="..\SearchDB.SeedData\SearchDB.SeedData.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Seed\" />
+  </ItemGroup>
 </Project>

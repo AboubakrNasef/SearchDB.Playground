@@ -19,7 +19,10 @@ builder.Services.AddExceptionHandler<SearchExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 builder.Services.AddOpenTelemetry()
-    .WithTracing(tracing => tracing.AddSource(SearchTelemetry.ActivitySourceName))
+    .WithTracing(tracing => tracing
+        .AddSource(SearchTelemetry.ActivitySourceName)
+        .AddSource("Npgsql")
+        .AddSource(MongoTelemetry.ActivitySourceName))
     .WithMetrics(metrics => metrics.AddMeter(SearchTelemetry.MeterName));
 
 var postgresConnection = builder.Configuration.GetConnectionString("pg-searchdb");
@@ -34,12 +37,17 @@ if (string.IsNullOrWhiteSpace(mongoConnection))
 else
 {
     var mongoDatabaseName = builder.Configuration["Mongo:Database"] ?? "searchdb";
-    builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoConnection));
+    var mongoSettings = MongoClientSettings.FromConnectionString(mongoConnection);
+    mongoSettings.TracingOptions = new() { QueryTextMaxLength = 4096 };
+    builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoSettings));
     builder.Services.AddSingleton(sp => sp.GetRequiredService<IMongoClient>().GetDatabase(mongoDatabaseName));
     builder.Services.AddSingleton<IMongoSearch, MongoSearch>();
 }
 
 var app = builder.Build();
+await using (var scope = app.Services.CreateAsyncScope())
+    await scope.ServiceProvider.GetRequiredService<SearchDbContext>().Database.EnsureCreatedAsync();
+
 app.UseExceptionHandler();
 app.MapDefaultEndpoints();
 app.MapSearchEndpoints();
