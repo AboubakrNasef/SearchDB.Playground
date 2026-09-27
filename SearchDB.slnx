@@ -3,19 +3,18 @@
     <File Path="docs/superpowers/specs/2026-09-26-search-dashboard-design.md" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="Domain/Domain.csproj" />
-    <Project Path="SearchDB.Application/SearchDB.Application.csproj" />
-    <Project Path="SearchDB.SeedData/SearchDB.SeedData.csproj" />
-    <Project Path="SearchDB.Initialize/SearchDB.Initialize.csproj" />
-    <Project Path="Domain.Tests/Domain.Tests.csproj" />
-    <Project Path="SearchDB.Application.Tests/SearchDB.Application.Tests.csproj" />
-    <Project Path="SearchDB.Infrastructure.Postgres/SearchDB.Infrastructure.Postgres.csproj" />
-    <Project Path="SearchDB.Infrastructure.Postgres.Tests/SearchDB.Infrastructure.Postgres.Tests.csproj" />
-    <Project Path="SearchDB.Infrastructure.Mongo/SearchDB.Infrastructure.Mongo.csproj" />
-    <Project Path="SearchDB.Infrastructure.Mongo.Tests/SearchDB.Infrastructure.Mongo.Tests.csproj" />
-    <Project Path="SearchDB.Api/SearchDB.Api.csproj" />
-    <Project Path="SearchDB.Api.Tests/SearchDB.Api.Tests.csproj" />
+    <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/Domain.Tests/Domain.Tests.csproj" />
+    <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/Domain/Domain.csproj" />
+    <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/SearchDB.Api.Tests/SearchDB.Api.Tests.csproj" />
+    <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/SearchDB.Api/SearchDB.Api.csproj" />
+    <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/SearchDB.Application.Tests/SearchDB.Application.Tests.csproj" />
+    <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/SearchDB.Application/SearchDB.Application.csproj" />
+    <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/SearchDB.Infrastructure.Mongo.Tests/SearchDB.Infrastructure.Mongo.Tests.csproj" />
+    <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/SearchDB.Infrastructure.Mongo/SearchDB.Infrastructure.Mongo.csproj" />
+    <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/SearchDB.Infrastructure.Postgres.Tests/SearchDB.Infrastructure.Postgres.Tests.csproj" />
+    <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/SearchDB.Infrastructure.Postgres/SearchDB.Infrastructure.Postgres.csproj" />
+    <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/SearchDB.SeedData/SearchDB.SeedData.csproj" />
   </Folder>
-  <Project Path="SearchDB.AppHost/SearchDB.AppHost.csproj" />
-  <Project Path="SearchDB.ServiceDefaults/SearchDB.ServiceDefaults.csproj" />
+  <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/SearchDB.AppHost/SearchDB.AppHost.csproj" />
+  <Project Path="D:/Programming/0.Practice/DATABASES/SearchProjectDb/SearchDB/SearchDB.ServiceDefaults/SearchDB.ServiceDefaults.csproj" />
 </Solution>

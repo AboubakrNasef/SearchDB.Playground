@@ -17,6 +17,8 @@ dotnet run --project SearchDB.AppHost
 
 Aspire starts the API, Vite frontend, and persistent local databases. In the Aspire dashboard, start the `initialize` resource to create the PostgreSQL schema and seed both databases. PostgreSQL search is available without MongoDB configuration. Open the frontend endpoint from the dashboard; Aspire passes the API's HTTP endpoint to Vite for its `/api` proxy.
 
+The initializer adds 100 repeatable Bogus products and 500 orders alongside the four fixed demo products. Set `SeedData__UseFaker` to `false` on the `initialize` resource to seed only the fixed demo records.
+
 ## Configure MongoDB Atlas for the app
 
 Store credentials in AppHost user secrets (never in `appsettings.json`):
