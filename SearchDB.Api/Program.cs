@@ -46,7 +46,17 @@ else
 
 var app = builder.Build();
 await using (var scope = app.Services.CreateAsyncScope())
-    await scope.ServiceProvider.GetRequiredService<SearchDbContext>().Database.EnsureCreatedAsync();
+    var database = scope.ServiceProvider.GetRequiredService<SearchDbContext>().Database;
+    await database.EnsureCreatedAsync();
+    await database.ExecuteSqlRawAsync("""
+        CREATE EXTENSION IF NOT EXISTS pg_trgm;
+        CREATE INDEX IF NOT EXISTS ix_products_sku_trgm ON products USING gin (sku gin_trgm_ops);
+        CREATE INDEX IF NOT EXISTS ix_products_name_trgm ON products USING gin (name gin_trgm_ops);
+        CREATE INDEX IF NOT EXISTS ix_products_category_trgm ON products USING gin (category gin_trgm_ops);
+        CREATE INDEX IF NOT EXISTS ix_products_description_trgm ON products USING gin (description gin_trgm_ops);
+        CREATE INDEX IF NOT EXISTS ix_orders_order_number_trgm ON orders USING gin (order_number gin_trgm_ops);
+        CREATE INDEX IF NOT EXISTS ix_orders_search_text_trgm ON orders USING gin (search_text gin_trgm_ops);
+        """);
 
 app.UseExceptionHandler();
 app.MapDefaultEndpoints();

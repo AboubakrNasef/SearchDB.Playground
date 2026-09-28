@@ -39,7 +39,15 @@ public sealed class PostgresSearch(SearchDbContext db) : IPostgresSearch
 
         var ranked = query.Length > 0;
         if (ranked)
-            products = products.Where(p => EF.Property<NpgsqlTsVector>(p, "SearchVector").Matches(EF.Functions.PlainToTsQuery("english", query)));
+        {
+            var pattern = LikePattern(query);
+            products = products.Where(p =>
+                EF.Property<NpgsqlTsVector>(p, "SearchVector").Matches(EF.Functions.PlainToTsQuery("english", query)) ||
+                EF.Functions.ILike(p.Sku, pattern, "\\") ||
+                EF.Functions.ILike(p.Name, pattern, "\\") ||
+                EF.Functions.ILike(p.Category, pattern, "\\") ||
+                EF.Functions.ILike(p.Description, pattern, "\\"));
+        }
 
         var total = await products.LongCountAsync(cancellationToken);
         var rows = await products
@@ -79,8 +87,11 @@ public sealed class PostgresSearch(SearchDbContext db) : IPostgresSearch
         var ranked = query.Length > 0;
         if (ranked)
         {
+            var pattern = LikePattern(query);
             orders = orders.Where(o =>
                 EF.Property<NpgsqlTsVector>(o, "SearchVector").Matches(EF.Functions.PlainToTsQuery("english", query)) ||
+                EF.Functions.ILike(o.OrderNumber, pattern, "\\") ||
+                EF.Functions.ILike(o.SearchText, pattern, "\\") ||
                 o.Items.Any(i => EF.Property<NpgsqlTsVector>(i, "SearchVector").Matches(EF.Functions.PlainToTsQuery("english", query))));
         }
 
@@ -106,4 +117,7 @@ public sealed class PostgresSearch(SearchDbContext db) : IPostgresSearch
             o.Id.ToString(), o.OrderNumber, o.Status.ToString(), null, o.Status.ToString(), o.Amount, o.CreatedAt, o.Score)).ToArray(), total,
             request.Page, request.PageSize, 0);
     }
+
+    // ponytail: substring matching scans text columns; add pg_trgm indexes if search volume makes it slow.
+    private static string LikePattern(string query) => $"%{query.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
 }
